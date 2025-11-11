@@ -1,0 +1,187 @@
+{{ 'featured-products.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  #featured-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top_mobile }}px;
+    padding-bottom: {{ section.settings.padding_bottom_mobile }}px;
+  }
+
+  #featured-{{ section.id }} .featured__inner {
+    max-width: {{ section.settings.max_width }}px;
+    margin: 0 auto;
+    padding-inline: 0;
+  }
+
+  @media screen and (min-width: 750px) {
+    #featured-{{ section.id }} {
+      padding-top: {{ section.settings.padding_top_desktop }}px;
+      padding-bottom: {{ section.settings.padding_bottom_desktop }}px;
+    }
+
+    #featured-{{ section.id }} .featured__inner {
+      padding-inline: 40px;
+    }
+  }
+{%- endstyle -%}
+
+<div
+  id="featured-{{ section.id }}"
+  class="featured color-{{ section.settings.color_scheme }} gradient"
+>
+  <div class="featured__inner">
+    {% if section.settings.title != blank %}
+      <h2 class="featured__title">{{ section.settings.title }}</h2>
+    {% endif %}
+
+    {% if section.settings.collection != blank %}
+      {% assign in_cart_product_ids = cart.items | map: 'product_id' %}
+      {% assign shown = 0 %}
+
+      <div class="featured__grid">
+        {% for product in section.settings.collection.products %}
+          {% if shown >= section.settings.limit %}{% break %}{% endif %}
+          {% unless in_cart_product_ids contains product.id %}
+            {% assign first_available = product.variants | where: 'available', true | first %}
+            {% if first_available %}
+              <article class="featured-card">
+                <a href="{{ product.url }}" class="featured-card__image-wrap">
+                  {{ product.featured_image
+                    | image_url: width: 800
+                    | image_tag: class: 'featured-card__image', alt: product.title }}
+                </a>
+
+                <h3 class="featured-card__title">
+                  <a href="{{ product.url }}">{{ product.title }}</a>
+                </h3>
+
+                <button
+                  is="featured-add-button"
+                  class="featured-card__btn button
+                    {% if section.settings.button_style == 'secondary' %}
+                      button--secondary
+                    {% else %}
+                      button--primary
+                    {% endif %}"
+                  data-variant-id="{{ first_available.id }}"
+                  data-section-id="{{ section.id }}"
+                >
+                  {{ section.settings.button_label }} &ndash; {{ product.price | money }}
+                </button>
+              </article>
+
+              {% assign shown = shown | plus: 1 %}
+            {% endif %}
+          {% endunless %}
+        {% endfor %}
+
+        {% if shown == 0 %}
+          <p class="featured__empty">No products to show.</p>
+        {% endif %}
+      </div>
+    {% else %}
+      <p class="featured__note">Select a collection in the section settings.</p>
+    {% endif %}
+  </div>
+</div>
+
+<script src="{{ 'featured-products.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Featured Products (Task)",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Featured Products"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection"
+    },
+    {
+      "type": "range",
+      "id": "limit",
+      "label": "Products limit",
+      "min": 1,
+      "max": 12,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "background-1"
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "label": "Max content width (px)",
+      "min": 800,
+      "max": 1400,
+      "step": 20,
+      "default": 1160
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "Padding top (mobile, px)",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 43
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "Padding bottom (mobile, px)",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 43
+    },
+    {
+      "type": "range",
+      "id": "padding_top_desktop",
+      "label": "Padding top (desktop, px)",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_desktop",
+      "label": "Padding bottom (desktop, px)",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 80
+    },
+    {
+      "type": "select",
+      "id": "button_style",
+      "label": "Button style",
+      "default": "primary",
+      "options": [
+        { "value": "primary", "label": "Primary (filled)" },
+        { "value": "secondary", "label": "Secondary (outline)" }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Add to cart"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Featured Products (Task)"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,16 @@
+node_modules
+dist
+
+*.lock
+package-lock.json
+
+*.DS_Store
+*error.log
+.idea
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
